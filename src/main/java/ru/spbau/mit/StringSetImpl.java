@@ -121,6 +121,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         try {
             root = new TrieNode();
             deserializeDfs(root, in);
+            size = root.terminalDescendantNumber;
         }
         catch (IOException exception) {
             throw new SerializationException();
