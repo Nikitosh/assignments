@@ -49,7 +49,8 @@ public class StringSetImpl implements StringSet, StreamSerializable {
     }
 
     public boolean contains(String element) {
-        return getNode(element) != null;
+        TrieNode node = getNode(element);
+        return node != null && node.isTerminal;
     }
 
     public boolean remove(String element) {
