@@ -7,13 +7,12 @@ import java.util.HashMap;
 public class TrieNode {
     public static final int ALPHABET_SIZE = 26;
 
-    private TrieNode[] children;
-    public boolean isTerminal;
-    public int terminalDescendantNumber;
-    public TrieNode parent;
+    private TrieNode[] children = new TrieNode[2 * ALPHABET_SIZE];
+    private boolean isTerminal;
+    private int terminalDescendantNumber;
+    private TrieNode parent;
 
     public TrieNode() {
-        children = new TrieNode[2 * ALPHABET_SIZE];
         isTerminal = false;
         terminalDescendantNumber = 0;
         parent = null;
@@ -24,7 +23,35 @@ public class TrieNode {
         this.parent = parent;
     }
 
-    private int getCode(char c) {
+    public boolean getIsTerminal() {
+        return isTerminal;
+    }
+
+    public void setIsTerminal(boolean isTerminalValue) {
+        isTerminal = isTerminalValue;
+    }
+
+    public int getTerminalDescendantNumber() {
+        return terminalDescendantNumber;
+    }
+
+    public void setTerminalDescendantNumber(int terminalDescendantNumberValue) {
+        terminalDescendantNumber = terminalDescendantNumberValue;
+    }
+
+    public void addToTerminalDescendantNumber(int delta) {
+        terminalDescendantNumber += delta;
+    }
+
+    public TrieNode getParent() {
+        return parent;
+    }
+
+    public void setParent(TrieNode parentValue) {
+        parent = parentValue;
+    }
+
+    static private int getCode(char c) {
         if (c >= 'a' && c <= 'z') {
             return c - 'a';
         }
