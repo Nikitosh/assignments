@@ -105,6 +105,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
 
     private void deserializeDfs(TrieNode node, InputStream in) throws IOException {
         node.isTerminal = in.read() != 0;
+        node.terminalDescendantNumber = (int) (node.isTerminal ? 1 : 0);
         while (true) {
             int c = in.read();
             if (c <= 0) {
@@ -112,6 +113,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
             }
             node.addChild((char) c);
             deserializeDfs(node.getChild((char) c), in);
+            node.terminalDescendantNumber += node.getChild((char) c).terminalDescendantNumber;
         }
     }
 
