@@ -10,13 +10,52 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class StringSetImpl implements StringSet, StreamSerializable {
+
+    private static class TrieNode {
+        private static final int ALPHABET_SIZE = 26;
+
+        private TrieNode[] children = new TrieNode[2 * ALPHABET_SIZE];
+        private boolean isTerminal;
+        private int terminalDescendantNumber;
+        private TrieNode parent;
+
+        public TrieNode() {
+            isTerminal = false;
+            terminalDescendantNumber = 0;
+            parent = null;
+        }
+
+        public TrieNode(TrieNode parent) {
+            this();
+            this.parent = parent;
+        }
+
+        static private int getCode(char c) {
+            if (c >= 'a' && c <= 'z') {
+                return c - 'a';
+            }
+            assert c >= 'A' && c <= 'Z';
+            return c - 'A' + ALPHABET_SIZE;
+        }
+
+        public TrieNode getChild(char c) {
+            return children[getCode(c)];
+        }
+
+        public void addChild(char c) {
+            children[getCode(c)] = new TrieNode(this);
+        }
+    }
+
+    private static final int GO_UP = 0;
+
     private TrieNode root = new TrieNode();
     private int size = 0;
 
     private TrieNode getNode(String element) {
         TrieNode currentNode = root;
-        for (int i = 0; i < element.length(); i++) {
-            TrieNode nextNode = currentNode.getChild(element.charAt(i));
+        for (char c : element.toCharArray()) {
+            TrieNode nextNode = currentNode.getChild(c);
             if (nextNode == null) {
                 return null;
             }
@@ -30,23 +69,22 @@ public class StringSetImpl implements StringSet, StreamSerializable {
             return false;
         }
         TrieNode currentNode = root;
-        for (int i = 0; i < element.length(); i++) {
-            currentNode.addToTerminalDescendantNumber(1);
-            char c = element.charAt(i);
+        for (char c : element.toCharArray()) {
+            currentNode.terminalDescendantNumber++;
             if (currentNode.getChild(c) == null) {
                 currentNode.addChild(c);
             }
             currentNode = currentNode.getChild(c);
         }
-        currentNode.addToTerminalDescendantNumber(1);
-        currentNode.setIsTerminal(true);
+        currentNode.terminalDescendantNumber++;
+        currentNode.isTerminal = true;
         size++;
         return true;
     }
 
     public boolean contains(String element) {
         TrieNode node = getNode(element);
-        return node != null && node.getIsTerminal();
+        return node != null && node.isTerminal;
     }
 
     public boolean remove(String element) {
@@ -54,10 +92,10 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         if (node == null) {
             return false;
         }
-        node.setIsTerminal(false);
+        node.isTerminal = false;
         while (node != null) {
-            node.addToTerminalDescendantNumber(-1);
-            node = node.getParent();
+            node.terminalDescendantNumber--;
+            node = node.parent;
         }
         size--;
         return true;
@@ -72,21 +110,25 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         if (node == null) {
             return 0;
         }
-        return node.getTerminalDescendantNumber();
+        return node.terminalDescendantNumber;
+    }
+
+    private char getChar(int number) {
+        if (number < TrieNode.ALPHABET_SIZE) {
+            return (char) ('a' + number);
+        }
+        return (char) ('A' + number - TrieNode.ALPHABET_SIZE);
     }
 
     private void serializeDfs(TrieNode node, OutputStream out) throws IOException {
-        out.write((byte) (node.getIsTerminal() ? 1 : 0));
+        out.write((byte) (node.isTerminal ? 1 : 0));
         for (int i = 0; i < 2 * TrieNode.ALPHABET_SIZE; i++) {
-            char c = (char) ('a' + i);
-            if (i >= TrieNode.ALPHABET_SIZE) {
-                c = (char) ('A' + i - TrieNode.ALPHABET_SIZE);
-            }
+            char c = getChar(i);
             TrieNode sonNode = node.getChild(c);
             if (sonNode != null) {
                 out.write(c);
                 serializeDfs(sonNode, out);
-                out.write(0);
+                out.write(GO_UP);
             }
         }
     }
@@ -101,16 +143,16 @@ public class StringSetImpl implements StringSet, StreamSerializable {
     }
 
     private void deserializeDfs(TrieNode node, InputStream in) throws IOException {
-        node.setIsTerminal(in.read() != 0);
-        node.setTerminalDescendantNumber((int) (node.getIsTerminal() ? 1 : 0));
+        node.isTerminal = in.read() != 0;
+        node.terminalDescendantNumber = (int) (node.isTerminal ? 1 : 0);
         while (true) {
             int c = in.read();
-            if (c <= 0) {
+            if (c == GO_UP || c == -1) {
                 return;
             }
             node.addChild((char) c);
             deserializeDfs(node.getChild((char) c), in);
-            node.addToTerminalDescendantNumber(node.getChild((char) c).getTerminalDescendantNumber());
+            node.terminalDescendantNumber += node.getChild((char) c).terminalDescendantNumber;
         }
     }
 
@@ -118,7 +160,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         try {
             root = new TrieNode();
             deserializeDfs(root, in);
-            size = root.getTerminalDescendantNumber();
+            size = root.terminalDescendantNumber;
         }
         catch (IOException exception) {
             throw new SerializationException();
