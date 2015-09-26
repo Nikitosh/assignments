@@ -1,7 +1,5 @@
 package ru.spbau.mit;
 
-import com.sun.org.apache.xpath.internal.SourceTree;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -15,14 +13,11 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         private static final int ALPHABET_SIZE = 26;
 
         private TrieNode[] children = new TrieNode[2 * ALPHABET_SIZE];
-        private boolean isTerminal;
-        private int terminalDescendantNumber;
-        private TrieNode parent;
+        private boolean isTerminal = false;
+        private int terminalDescendantNumber = 0;
+        private TrieNode parent = null;
 
         public TrieNode() {
-            isTerminal = false;
-            terminalDescendantNumber = 0;
-            parent = null;
         }
 
         public TrieNode(TrieNode parent) {
@@ -144,15 +139,16 @@ public class StringSetImpl implements StringSet, StreamSerializable {
 
     private void deserializeDfs(TrieNode node, InputStream in) throws IOException {
         node.isTerminal = in.read() != 0;
-        node.terminalDescendantNumber = (int) (node.isTerminal ? 1 : 0);
+        node.terminalDescendantNumber = (node.isTerminal ? 1 : 0);
         while (true) {
             int c = in.read();
             if (c == GO_UP || c == -1) {
                 return;
             }
-            node.addChild((char) c);
-            deserializeDfs(node.getChild((char) c), in);
-            node.terminalDescendantNumber += node.getChild((char) c).terminalDescendantNumber;
+            char symbol = (char) c;
+            node.addChild(symbol);
+            deserializeDfs(node.getChild(symbol), in);
+            node.terminalDescendantNumber += node.getChild(symbol).terminalDescendantNumber;
         }
     }
 
