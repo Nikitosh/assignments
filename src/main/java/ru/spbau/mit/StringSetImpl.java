@@ -21,7 +21,6 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         }
 
         public TrieNode(TrieNode parent) {
-            this();
             this.parent = parent;
         }
 
@@ -44,7 +43,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
 
     private static final int GO_UP = 0;
 
-    private TrieNode root = new TrieNode();
+    private TrieNode root = new TrieNode(null);
     private int size = 0;
 
     private TrieNode getNode(String element) {
@@ -139,7 +138,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
 
     private void deserializeDfs(TrieNode node, InputStream in) throws IOException {
         node.isTerminal = in.read() != 0;
-        node.terminalDescendantNumber = (node.isTerminal ? 1 : 0);
+        node.terminalDescendantNumber = node.isTerminal ? 1 : 0;
         while (true) {
             int c = in.read();
             if (c == GO_UP || c == -1) {
