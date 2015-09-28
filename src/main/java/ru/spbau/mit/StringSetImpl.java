@@ -24,7 +24,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
             this.parent = parent;
         }
 
-        static private int getCode(char c) {
+        private static int getCode(char c) {
             if (c >= 'a' && c <= 'z') {
                 return c - 'a';
             }
@@ -43,8 +43,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
 
     private static final int GO_UP = 0;
 
-    private TrieNode root = new TrieNode(null);
-    private int size = 0;
+    private TrieNode root = new TrieNode();
 
     private TrieNode getNode(String element) {
         TrieNode currentNode = root;
@@ -62,6 +61,7 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         if (contains(element)) {
             return false;
         }
+
         TrieNode currentNode = root;
         for (char c : element.toCharArray()) {
             currentNode.terminalDescendantNumber++;
@@ -72,7 +72,6 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         }
         currentNode.terminalDescendantNumber++;
         currentNode.isTerminal = true;
-        size++;
         return true;
     }
 
@@ -86,17 +85,17 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         if (node == null) {
             return false;
         }
+
         node.isTerminal = false;
         while (node != null) {
             node.terminalDescendantNumber--;
             node = node.parent;
         }
-        size--;
         return true;
     }
 
     public int size() {
-        return size;
+        return root.terminalDescendantNumber;
     }
 
     public int howManyStartsWithPrefix(String prefix) {
@@ -155,7 +154,6 @@ public class StringSetImpl implements StringSet, StreamSerializable {
         try {
             root = new TrieNode();
             deserializeDfs(root, in);
-            size = root.terminalDescendantNumber;
         }
         catch (IOException exception) {
             throw new SerializationException();
