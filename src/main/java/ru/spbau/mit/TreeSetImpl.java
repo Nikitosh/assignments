@@ -84,12 +84,12 @@ public class TreeSetImpl<E> extends AbstractSet<E> {
             }
             Pair<Node, Node> pair = split(root, lastNode.value, false);
             Pair<Node, Node> pair2 = split(pair.first, lastNode.value, true);
-            root = merge(pair.first, pair2.second);
-            Node curNode = pair.first;
+            Node curNode = pair2.first;
             while (curNode != null && curNode.right != null) {
                 curNode = curNode.right;
             }
             lastNode = curNode;
+            root = merge(pair2.first, pair.second);
         }
     }
 
