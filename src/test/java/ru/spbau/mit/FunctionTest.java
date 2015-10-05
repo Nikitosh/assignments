@@ -88,7 +88,7 @@ public class FunctionTest {
         Predicate<Integer> positiveLazyPredicate = new Predicate<Integer>() {
             @Override
             public Boolean apply(Integer x) {
-                assertTrue(false);
+                fail();
                 return x > 0;
             }
         };
