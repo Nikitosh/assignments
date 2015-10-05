@@ -1,7 +1,7 @@
 package ru.spbau.mit;
 
 public abstract class Predicate<T> extends Function1<T, Boolean>{
-    public <S extends T> Predicate<S> or(final Predicate<S> predicate) {
+    public <S extends T> Predicate<S> or(final Predicate<? super S> predicate) {
         return new Predicate<S>() {
             @Override
             public Boolean apply(final S x) {
@@ -10,7 +10,7 @@ public abstract class Predicate<T> extends Function1<T, Boolean>{
         };
     }
 
-    public <S extends T> Predicate<S> and(final Predicate<S> predicate) {
+    public <S extends T> Predicate<S> and(final Predicate<? super S> predicate) {
         return new Predicate<S>() {
             @Override
             public Boolean apply(final S x) {
