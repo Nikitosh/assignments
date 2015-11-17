@@ -113,21 +113,19 @@ public class QuizGame implements Game {
 
             @Override
             public void run() {
-                synchronized (this) {
-                    for (int i = 0; i < maxLettersToOpen; i++) {
-                        try {
-                            Thread.sleep(delayUntilNextLetter);
-                            server.broadcast(PREFIX + currentQuestion.answer.substring(0, openLettersNumber++ + 1));
-                        } catch (InterruptedException e) {
-                            return;
-                        }
-                    }
+                for (int i = 0; i < maxLettersToOpen; i++) {
                     try {
                         Thread.sleep(delayUntilNextLetter);
-                        server.broadcast(NO_ANSWER + currentQuestion.answer);
+                        server.broadcast(PREFIX + currentQuestion.answer.substring(0, openLettersNumber++ + 1));
                     } catch (InterruptedException e) {
                         return;
                     }
+                }
+                try {
+                    Thread.sleep(delayUntilNextLetter);
+                    server.broadcast(NO_ANSWER + currentQuestion.answer);
+                } catch (InterruptedException e) {
+                    return;
                 }
             }
         });
