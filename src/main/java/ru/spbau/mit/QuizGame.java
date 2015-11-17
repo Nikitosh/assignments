@@ -106,29 +106,31 @@ public class QuizGame implements Game {
     }
 
     private void startRound() {
-        final Question currentQuestion = questionList.get(currentQuestionIndex);
-        server.broadcast(NEW_ROUND + currentQuestion.question + " (" + currentQuestion.answer.length() + " letters)");
-        currentQuestionThread = new Thread(new Runnable() {
-            private int openLettersNumber = 0;
+        synchronized (this) {
+            final Question currentQuestion = questionList.get(currentQuestionIndex);
+            server.broadcast(NEW_ROUND + currentQuestion.question + " (" + currentQuestion.answer.length() + " letters)");
+            currentQuestionThread = new Thread(new Runnable() {
+                private int openLettersNumber = 0;
 
-            @Override
-            public void run() {
-                for (int i = 0; i < maxLettersToOpen; i++) {
+                @Override
+                public void run() {
+                    for (int i = 0; i < maxLettersToOpen; i++) {
+                        try {
+                            Thread.sleep(delayUntilNextLetter);
+                            server.broadcast(PREFIX + currentQuestion.answer.substring(0, openLettersNumber++ + 1));
+                        } catch (InterruptedException e) {
+                            return;
+                        }
+                    }
                     try {
                         Thread.sleep(delayUntilNextLetter);
-                        server.broadcast(PREFIX + currentQuestion.answer.substring(0, openLettersNumber++ + 1));
+                        server.broadcast(NO_ANSWER + currentQuestion.answer);
                     } catch (InterruptedException e) {
                         return;
                     }
                 }
-                try {
-                    Thread.sleep(delayUntilNextLetter);
-                    server.broadcast(NO_ANSWER + currentQuestion.answer);
-                } catch (InterruptedException e) {
-                    return;
-                }
-            }
-        });
-        currentQuestionThread.start();
+            });
+            currentQuestionThread.start();
+        }
     }
 }

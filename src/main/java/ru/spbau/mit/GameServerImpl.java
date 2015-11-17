@@ -28,10 +28,12 @@ public class GameServerImpl implements GameServer {
     @Override
     public void accept(final Connection connection) {
         final String id = Integer.toString(connectionNumber++);
-        connections.put(id, connection);
+        synchronized (connections) {
+            connections.put(id, connection);
+        }
         connection.send(id);
         new Thread(new Runnable() {
-            private static final int TIMEOUT = 1000;
+            private static final int TIMEOUT = 100;
 
             @Override
             public void run() {
@@ -54,18 +56,22 @@ public class GameServerImpl implements GameServer {
 
     @Override
     public void broadcast(String message) {
-        for (Connection connection : connections.values()) {
-            if (!connection.isClosed()) {
-                connection.send(message);
+        synchronized (connections) {
+            for (Connection connection : connections.values()) {
+                if (!connection.isClosed()) {
+                    connection.send(message);
+                }
             }
         }
     }
 
     @Override
     public void sendTo(String id, String message) {
-        Connection connection = connections.get(id);
-        if (!connection.isClosed()) {
-            connection.send(message);
+        synchronized (connections) {
+            Connection connection = connections.get(id);
+            if (!connection.isClosed()) {
+                connection.send(message);
+            }
         }
     }
 }
