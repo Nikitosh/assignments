@@ -17,8 +17,8 @@ public class GameServerImpl implements GameServer {
         for (String property : properties.stringPropertyNames()) {
             String methodName = "set" + property.substring(0, 1).toUpperCase() + property.substring(1);
             try {
-                Integer number = Integer.parseInt(properties.getProperty(property));
-                gameClass.getMethod(methodName, Integer.class).invoke(game, number);
+                int number = Integer.parseInt(properties.getProperty(property));
+                gameClass.getMethod(methodName, int.class).invoke(game, number);
             } catch (NumberFormatException e) {
                 gameClass.getMethod(methodName, String.class).invoke(game, properties.getProperty(property));
             }

@@ -20,7 +20,7 @@ public class QuizGame implements Game {
     private GameServer server;
     private ArrayList<Question> questionList = new ArrayList<Question>();
     private int currentQuestionIndex = 0;
-    private boolean isStopped = false;
+    private boolean isStopped = true;
     private Thread currentQuestionThread;
 
     private static class Question {
@@ -36,11 +36,11 @@ public class QuizGame implements Game {
         this.server = server;
     }
 
-    public void setDelayUntilNextLetter(Integer delayUntilNextLetter) {
+    public void setDelayUntilNextLetter(int delayUntilNextLetter) {
         this.delayUntilNextLetter = delayUntilNextLetter;
     }
 
-    public void setMaxLettersToOpen(Integer maxLettersToOpen) {
+    public void setMaxLettersToOpen(int maxLettersToOpen) {
         this.maxLettersToOpen = maxLettersToOpen;
     }
 
@@ -53,33 +53,33 @@ public class QuizGame implements Game {
     }
 
     @Override
-    public void onPlayerSentMsg(String id, String msg) {
-        synchronized (this) {
-            if (msg == START) {
+    public synchronized void onPlayerSentMsg(String id, String msg) {
+        if (msg == START) {
+            if (isStopped) {
                 isStopped = false;
                 startGame();
                 startRound();
-                return;
             }
-            if (isStopped) {
-                return;
+            return;
+        }
+        if (isStopped) {
+            return;
+        }
+        if (msg == STOP) {
+            isStopped = true;
+            currentQuestionIndex = (currentQuestionIndex + 1) % questionList.size();
+            server.broadcast(GAME_STOPPED + id);
+            if (currentQuestionThread != null) {
+                currentQuestionThread.interrupt();
             }
-            if (msg == STOP) {
-                isStopped = true;
+        } else {
+            if (msg != null && msg.equals(questionList.get(currentQuestionIndex).answer)) {
+                server.broadcast(WINNER_IS + id);
                 currentQuestionIndex = (currentQuestionIndex + 1) % questionList.size();
-                server.broadcast(GAME_STOPPED + id);
-                if (currentQuestionThread != null) {
-                    currentQuestionThread.interrupt();
-                }
+                currentQuestionThread.interrupt();
+                startRound();
             } else {
-                if (msg != null && msg.equals(questionList.get(currentQuestionIndex).answer)) {
-                    server.broadcast(WINNER_IS + id);
-                    currentQuestionIndex = (currentQuestionIndex + 1) % questionList.size();
-                    currentQuestionThread.interrupt();
-                    startRound();
-                } else {
-                    server.sendTo(id, WRONG_TRY);
-                }
+                server.sendTo(id, WRONG_TRY);
             }
         }
     }
@@ -90,9 +90,7 @@ public class QuizGame implements Game {
             String line;
             while ((line = reader.readLine()) != null) {
                 String [] parts = line.split(";");
-                if (parts.length != 2) {
-                    throw new RuntimeException("Wrong structure of question");
-                }
+                assert(parts.length == 2);
                 questionList.add(new Question(parts[0], parts[1]));
             }
         } catch (IOException e) {
@@ -106,31 +104,30 @@ public class QuizGame implements Game {
     }
 
     private void startRound() {
-        synchronized (this) {
-            final Question currentQuestion = questionList.get(currentQuestionIndex);
-            server.broadcast(NEW_ROUND + currentQuestion.question + " (" + currentQuestion.answer.length() + " letters)");
-            currentQuestionThread = new Thread(new Runnable() {
-                private int openLettersNumber = 0;
+        final Question currentQuestion = questionList.get(currentQuestionIndex);
+        server.broadcast(NEW_ROUND + currentQuestion.question + " (" + currentQuestion.answer.length() + " letters)");
+        currentQuestionThread = new Thread(new Runnable() {
+            private int openLettersNumber = 0;
 
-                @Override
-                public void run() {
-                    for (int i = 0; i < maxLettersToOpen; i++) {
-                        try {
-                            Thread.sleep(delayUntilNextLetter);
-                            server.broadcast(PREFIX + currentQuestion.answer.substring(0, openLettersNumber++ + 1));
-                        } catch (InterruptedException e) {
-                            return;
-                        }
-                    }
+            @Override
+            public void run() {
+                for (int i = 0; i < maxLettersToOpen; i++) {
                     try {
                         Thread.sleep(delayUntilNextLetter);
-                        server.broadcast(NO_ANSWER + currentQuestion.answer);
+                        ++openLettersNumber;
+                        server.broadcast(PREFIX + currentQuestion.answer.substring(0, openLettersNumber));
                     } catch (InterruptedException e) {
                         return;
                     }
                 }
-            });
-            currentQuestionThread.start();
-        }
+                try {
+                    Thread.sleep(delayUntilNextLetter);
+                    server.broadcast(NO_ANSWER + currentQuestion.answer);
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+        });
+        currentQuestionThread.start();
     }
 }
