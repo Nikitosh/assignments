@@ -46,6 +46,7 @@ public class QuizGame implements Game {
 
     public void setDictionaryFilename(String dictionaryFilename) {
         this.dictionaryFilename = dictionaryFilename;
+        readQuestions();
     }
 
     @Override
@@ -57,7 +58,6 @@ public class QuizGame implements Game {
         if (msg == START) {
             if (isStopped) {
                 isStopped = false;
-                startGame();
                 startRound();
             }
             return;
@@ -84,7 +84,7 @@ public class QuizGame implements Game {
         }
     }
 
-    private void startGame() {
+    private void readQuestions() {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(dictionaryFilename));
             String line;
