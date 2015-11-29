@@ -11,24 +11,26 @@ public class GameServerImpl implements GameServer {
     private Game game;
     private HashMap <String, Connection> connections = new HashMap<String, Connection>();
 
+    private Integer getInteger(String s) {
+        try {
+            int value = Integer.parseInt(s);
+            return value;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     public GameServerImpl(String gameClassName, Properties properties) throws ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
-        Class <?> gameClass = Class.forName(gameClassName);
+        Class<?> gameClass = Class.forName(gameClassName);
         game = (Game) gameClass.getConstructor(GameServer.class).newInstance(this);
         for (String property : properties.stringPropertyNames()) {
             String methodName = "set" + property.substring(0, 1).toUpperCase() + property.substring(1);
-            try {
-                int number = Integer.parseInt(properties.getProperty(property));
-                try {
-                    gameClass.getMethod(methodName, int.class).invoke(game, number);
-                } catch (Exception exception) {
-                    exception.printStackTrace();
-                }
-            } catch (NumberFormatException e) {
-                try {
-                    gameClass.getMethod(methodName, String.class).invoke(game, properties.getProperty(property));
-                } catch (Exception exception) {
-                    exception.printStackTrace();
-                }
+            String propertyValue = properties.getProperty(property);
+            Integer number = getInteger(propertyValue);
+            if (number == null) {
+                gameClass.getMethod(methodName, String.class).invoke(game, propertyValue);
+            } else {
+                gameClass.getMethod(methodName, int.class).invoke(game, number);
             }
         }
     }
@@ -56,7 +58,9 @@ public class GameServerImpl implements GameServer {
                                 }
                             }
                         }
-                    } catch (InterruptedException e) {}
+                    } catch (InterruptedException e) {
+                        return;
+                    }
                 }
             }
         }).start();
