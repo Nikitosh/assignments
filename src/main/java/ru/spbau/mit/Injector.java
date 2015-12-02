@@ -15,19 +15,20 @@ public class Injector {
 
     public static Object initialize(String rootClassName, List<String> implementationClassNames) throws Exception {
         creatingInProgressClasses.add(rootClassName);
-        Class<?> rootClass = Class.forName(rootClassName);
-        Constructor <?> constructor = rootClass.getConstructors()[0];
+        Constructor <?> constructor = Class.forName(rootClassName).getConstructors()[0];
         Class [] parameterTypes = constructor.getParameterTypes();
         Object [] parameterObjects = new Object[parameterTypes.length];
-        ArrayList <String> newImplementationClassNames = new ArrayList<String>();
-        newImplementationClassNames.addAll(implementationClassNames);
+
+        ArrayList <String> extendedImplementationClassNames = new ArrayList<String>();
+        extendedImplementationClassNames.addAll(implementationClassNames);
         if (!implementationClassNames.contains(rootClassName))
-            newImplementationClassNames.add(rootClassName);
+            extendedImplementationClassNames.add(rootClassName);
+
         for (int i = 0; i < parameterTypes.length; i++) {
             Class parameterClass = parameterTypes[i];
             String className = null;
             ArrayList <String> implementationClasses = new ArrayList<>();
-            for (String newImplementationClassName : newImplementationClassNames) {
+            for (String newImplementationClassName : extendedImplementationClassNames) {
                 if (parameterClass.isAssignableFrom(Class.forName(newImplementationClassName))) {
                     implementationClasses.add(newImplementationClassName);
                 }
@@ -46,9 +47,10 @@ public class Injector {
                 if (creatingInProgressClasses.contains(className)) {
                     throw new InjectionCycleException();
                 }
-                parameterObjects[i] = initialize(className, newImplementationClassNames);
+                parameterObjects[i] = initialize(className, extendedImplementationClassNames);
             }
         }
+
         Object resultClass = constructor.newInstance(parameterObjects);
         creatingInProgressClasses.remove(rootClassName);
         createdClasses.put(rootClassName, resultClass);
