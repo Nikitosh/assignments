@@ -29,10 +29,12 @@ public class Injector {
             if (parameterClass.isInterface()) {
                 ArrayList <String> implementationClasses = new ArrayList<>();
                 for (String newImplementationClassName : newImplementationClassNames) {
-                    Class <?> [] interfaces = Class.forName(newImplementationClassName).getInterfaces();
-                    for (int j = 0; j < interfaces.length; j++) {
-                        if (interfaces[j].equals(parameterClass)) {
-                            implementationClasses.add(newImplementationClassName);
+                    if (!newImplementationClassName.equals(rootClassName)) {
+                        Class<?>[] interfaces = Class.forName(newImplementationClassName).getInterfaces();
+                        for (int j = 0; j < interfaces.length; j++) {
+                            if (interfaces[j].equals(parameterClass)) {
+                                implementationClasses.add(newImplementationClassName);
+                            }
                         }
                     }
                 }
