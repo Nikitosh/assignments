@@ -28,7 +28,7 @@ public class Injector {
             String className = null;
             if (parameterClass.isInterface()) {
                 ArrayList <String> implementationClasses = new ArrayList<>();
-                for (String newImplementationClassName : implementationClassNames) {
+                for (String newImplementationClassName : newImplementationClassNames) {
                     Class <?> [] interfaces = Class.forName(newImplementationClassName).getInterfaces();
                     for (int j = 0; j < interfaces.length; j++) {
                         if (interfaces[j].equals(parameterClass)) {
@@ -46,7 +46,7 @@ public class Injector {
             }
             else {
                 className = parameterClass.getCanonicalName();
-                if (!implementationClassNames.contains(className)) {
+                if (!newImplementationClassNames.contains(className)) {
                     throw new ImplementationNotFoundException();
                 }
             }
