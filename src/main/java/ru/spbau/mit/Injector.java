@@ -1,10 +1,7 @@
 package ru.spbau.mit;
 
-import java.util.List;
+import java.util.*;
 import java.lang.reflect.Constructor;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.ArrayList;
 
 public class Injector {
 
@@ -22,6 +19,10 @@ public class Injector {
         Constructor <?> constructor = rootClass.getConstructors()[0];
         Class [] parameterTypes = constructor.getParameterTypes();
         Object [] parameterObjects = new Object[parameterTypes.length];
+        ArrayList <String> newImplementationClassNames = new ArrayList<String>();
+        newImplementationClassNames.addAll(implementationClassNames);
+        if (!implementationClassNames.contains(rootClassName))
+            newImplementationClassNames.add(rootClassName);
         for (int i = 0; i < parameterTypes.length; i++) {
             Class parameterClass = parameterTypes[i];
             String className = null;
@@ -56,7 +57,7 @@ public class Injector {
                 if (creatingInProgressClasses.contains(className)) {
                     throw new InjectionCycleException();
                 }
-                parameterObjects[i] = initialize(className, implementationClassNames);
+                parameterObjects[i] = initialize(className, newImplementationClassNames);
             }
         }
         Object resultClass = constructor.newInstance(parameterObjects);
