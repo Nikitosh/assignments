@@ -28,11 +28,11 @@ public class Injector {
             String className = null;
             if (parameterClass.isInterface()) {
                 ArrayList <String> implementationClasses = new ArrayList<>();
-                for (String implementationClassName : implementationClassNames) {
-                    Class <?> [] interfaces = Class.forName(implementationClassName).getInterfaces();
+                for (String newImplementationClassName : implementationClassNames) {
+                    Class <?> [] interfaces = Class.forName(newImplementationClassName).getInterfaces();
                     for (int j = 0; j < interfaces.length; j++) {
                         if (interfaces[j].equals(parameterClass)) {
-                            implementationClasses.add(implementationClassName);
+                            implementationClasses.add(newImplementationClassName);
                         }
                     }
                 }
